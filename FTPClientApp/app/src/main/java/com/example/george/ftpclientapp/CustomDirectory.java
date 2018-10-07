@@ -10,6 +10,7 @@ import java.util.Arrays;
 public class CustomDirectory extends CustomNode {
     public ArrayList<CustomNode> contents;
     public static FTPFile[] lastUsed;
+    private long dirSize;
 
     public CustomDirectory() {
         super();
@@ -19,6 +20,7 @@ public class CustomDirectory extends CustomNode {
     public CustomDirectory(CustomNode parentNode, FTPFile f) {
         super(parentNode, f);
         contents = new ArrayList<CustomNode>();
+        dirSize = f.getSize();
     }
 
     @Override
@@ -33,6 +35,8 @@ public class CustomDirectory extends CustomNode {
                 fileList = new ArrayList<>(Arrays.asList(lastUsed));
             }
         } catch (IOException e) { return; }
+        if(!path.isEmpty())
+            contents.add(new CustomDirectory(this, fileLink));
         for(FTPFile f : fileList) {
             CustomNode newNode;
             if(f.isFile())
@@ -41,6 +45,12 @@ public class CustomDirectory extends CustomNode {
                 newNode = new CustomDirectory(this, f);
             contents.add(newNode);
             newNode.expandNodes();
+            dirSize += newNode.getSize();
         }
+    }
+
+    @Override
+    public long getSize() {
+        return dirSize;
     }
 }

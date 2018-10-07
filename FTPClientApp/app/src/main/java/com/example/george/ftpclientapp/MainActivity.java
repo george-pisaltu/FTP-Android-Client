@@ -5,8 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -17,11 +16,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import org.apache.commons.net.*;
-import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPClientConfig;
-import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
 import java.io.IOException;
@@ -32,6 +27,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        appContext = getApplicationContext();
+        ExplorerActivity.ftpClient = ftp;
+        ExplorerActivity.pathToDownloadLocation =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() + "/";
+
+        isConnecting = false;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -60,15 +61,10 @@ public class MainActivity extends AppCompatActivity {
 
                 CustomNode.root = new CustomDirectory();
 
-                NetworkingThread nTh = new NetworkingThread();
-                nTh.execute("");
-                if(nTh.error.isEmpty())
-                {
-                    Intent startIntent = new Intent(getApplicationContext(), ExplorerActivity.class);
-                    startActivity(startIntent);
+                if(!isConnecting) {
+                    NetworkingThread connectTh = new NetworkingThread();
+                    connectTh.execute("");
                 }
-
-
             }
         });
     }
@@ -95,8 +91,14 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onBackPressed() {
+        new DisconnectThread().execute();
+        super.onBackPressed();
+    }
+
     public void ShowToast(String str) {
-        Toast.makeText(getApplicationContext(), str, Toast.LENGTH_LONG);
+        Toast.makeText(getBaseContext(), str, Toast.LENGTH_LONG).show();
     }
 
     public EditText server;
@@ -104,6 +106,8 @@ public class MainActivity extends AppCompatActivity {
     public EditText pass;
     public FTPClient ftp = new FTPClient();
     public ArrayList<String> pathsToDownload;
+    public Context appContext;
+    public boolean isConnecting;
 
 
 
@@ -133,8 +137,6 @@ public class MainActivity extends AppCompatActivity {
                     error = "User or password incorrect";
                     return null;
                 }
-
-                //ftp.setFileType(FTP.BINARY_FILE_TYPE);
             } catch (IOException e) {
                 error = "Error connecting to the server";
                 return null;
@@ -156,7 +158,12 @@ public class MainActivity extends AppCompatActivity {
             ProgressBar prgBar = (ProgressBar) findViewById(R.id.progressBar);
             prgBar.setProgress(0);
             prgBar.setVisibility(View.GONE);
-            if(!error.isEmpty()) {
+            isConnecting = false;
+            if(error.isEmpty())
+            {
+                Intent startIntent = new Intent(appContext, ExplorerActivity.class);
+                startActivity(startIntent);
+            } else {
                 ShowToast(error);
             }
         }
@@ -167,9 +174,10 @@ public class MainActivity extends AppCompatActivity {
             prgBar.setVisibility(View.VISIBLE);
         }
 
-    public String error = "";
+
+        public String error = "";
     }
 
 
 
-}/////END OF MAIN
+}

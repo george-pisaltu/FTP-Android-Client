@@ -36,4 +36,12 @@ public class CustomNode {
 
     }
 
+    public boolean isFile() {
+        return isFile;
+    }
+
+    public long getSize() {
+        return fileLink.getSize();
+    }
+
 }
