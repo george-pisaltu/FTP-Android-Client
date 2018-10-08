@@ -55,9 +55,6 @@ public class MainActivity extends AppCompatActivity {
                 server = findViewById(R.id.serverNameEditText);
                 user = findViewById(R.id.usernameEditText);
                 pass = findViewById(R.id.passwordEditText);
-                server.setText("192.168.1.5");
-                user.setText("anonymous");
-                pass.setText("anonymous");
 
                 CustomNode.root = new CustomDirectory();
 
